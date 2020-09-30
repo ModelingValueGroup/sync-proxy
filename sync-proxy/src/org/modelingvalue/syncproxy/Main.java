@@ -21,6 +21,8 @@ import java.util.*;
 import java.util.stream.*;
 
 public class Main {
+    private static final boolean VERBOSE = Boolean.getBoolean("VERBOSE");
+
     private static int connectionNumber;
 
     public static void main(String[] args) {
@@ -44,7 +46,9 @@ public class Main {
         listenSocket = new ServerSocket(port);
         this.port = listenSocket.getLocalPort();
         listenThread = new Thread(() -> {
-            System.err.println("listening for clients on port " + this.port + "...");
+            if (VERBOSE) {
+                System.err.println("listening for clients on port " + this.port + "...");
+            }
             while (!listenSocket.isClosed()) {
                 try {
                     addClient(listenSocket.accept());
@@ -54,7 +58,9 @@ public class Main {
                     }
                 }
             }
-            System.err.println("stop listening for clients on port " + this.port);
+            if (VERBOSE) {
+                System.err.println("stop listening for clients on port " + this.port);
+            }
         }, "SyncProxy-" + this.port);
         listenThread.start();
     }
@@ -64,13 +70,17 @@ public class Main {
     }
 
     private synchronized void addClient(Socket sock) throws IOException {
-        System.err.println("new  client: " + sock + " (" + connectionSet.size() + " clients now)");
+        if (VERBOSE) {
+            System.err.println("new  client: " + sock + " (" + connectionSet.size() + " clients now)");
+        }
         connectionSet.add(new SockReader(sock, connectionNumber++));
     }
 
     private synchronized void removeClient(SockReader sr) {
         if (connectionSet.remove(sr)) {
-            System.err.println("lost client: " + sr.sock + " (" + connectionSet.size() + " clients now)");
+            if (VERBOSE) {
+                System.err.println("lost client: " + sr.sock + " (" + connectionSet.size() + " clients now)");
+            }
         }
     }
 

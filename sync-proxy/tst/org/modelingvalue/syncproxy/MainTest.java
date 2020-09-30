@@ -35,10 +35,10 @@ class MainTest {
         TestClient c1         = new TestClient(actualPort);
 
         c0.writeLine("haystack1");
-        assertEquals("haystack1", c1.readline());
+        assertEquals("haystack1", c1.readLine());
 
         c1.writeLine("haystack2");
-        assertEquals("haystack2", c0.readline());
+        assertEquals("haystack2", c0.readLine());
 
         assertEquals(5, getThreadCount(initialThreads));
 
@@ -61,18 +61,18 @@ class MainTest {
         TestClient c1         = new TestClient(actualPort);
 
         c0.writeLine("haystack1");
-        assertEquals("haystack1", c1.readline());
+        assertEquals("haystack1", c1.readLine());
 
         c1.writeLine("haystack2");
-        assertEquals("haystack2", c0.readline());
+        assertEquals("haystack2", c0.readLine());
 
         main.close();
 
         c0.writeLine("closed");
-        assertNull(c1.readline());
+        assertNull(c1.readNull());
 
         c1.writeLine("closed");
-        assertNull(c0.readline());
+        assertNull(c0.readNull());
 
         c0.interrupt();
         c1.interrupt();
@@ -87,16 +87,56 @@ class MainTest {
 
         c0.writeLine("haystack1");
         c1.writeLine("haystack2");
-        assertEquals("haystack1", c1.readline());
-        assertEquals("haystack2", c0.readline());
+        assertEquals("haystack1", c1.readLine());
+        assertEquals("haystack2", c0.readLine());
 
         main.close();
 
         c0.writeLine("closed");
         c1.writeLine("closed");
-        assertNull(c1.readline());
-        assertNull(c0.readline());
+        assertNull(c1.readNull());
+        assertNull(c0.readNull());
 
+        c0.interrupt();
+        c1.interrupt();
+    }
+
+    @RepeatedTest(1)
+    void longString() throws IOException, InterruptedException {
+        Main       main       = new Main(0);
+        int        actualPort = main.getPort();
+        TestClient c0         = new TestClient(actualPort);
+        TestClient c1         = new TestClient(actualPort);
+
+        String s0 = longRandomString();
+        String s1 = longRandomString();
+        c0.writeLine(s0);
+        c1.writeLine(s1);
+        assertEquals(s0, c1.readLine());
+        assertEquals(s1, c0.readLine());
+
+        main.close();
+        c0.interrupt();
+        c1.interrupt();
+    }
+
+    @RepeatedTest(1)
+    void manyStrings() throws IOException, InterruptedException {
+        Main       main       = new Main(0);
+        int        actualPort = main.getPort();
+        TestClient c0         = new TestClient(actualPort);
+        TestClient c1         = new TestClient(actualPort);
+
+        for (int i = 0; i < 1000; i++) {
+            String s0 = mediumRandomString();
+            String s1 = mediumRandomString();
+            c0.writeLine(s0);
+            c1.writeLine(s1);
+            assertEquals(s0, c1.readLine());
+            assertEquals(s1, c0.readLine());
+        }
+
+        main.close();
         c0.interrupt();
         c1.interrupt();
     }
@@ -110,21 +150,33 @@ class MainTest {
         TestClient c2         = new TestClient(actualPort);
 
         c0.writeLine("haystack1");
-        assertEquals("haystack1", c1.readline());
-        assertEquals("haystack1", c2.readline());
+        assertEquals("haystack1", c1.readLine());
+        assertEquals("haystack1", c2.readLine());
 
         c1.writeLine("haystack2");
-        assertEquals("haystack2", c0.readline());
-        assertEquals("haystack2", c2.readline());
+        assertEquals("haystack2", c0.readLine());
+        assertEquals("haystack2", c2.readLine());
 
         c2.writeLine("haystack3");
-        assertEquals("haystack3", c0.readline());
-        assertEquals("haystack3", c1.readline());
+        assertEquals("haystack3", c0.readLine());
+        assertEquals("haystack3", c1.readLine());
 
         main.close();
         c0.interrupt();
         c1.interrupt();
         c2.interrupt();
+    }
+
+    private static String mediumRandomString() {
+        byte[] bytes = new byte[1024];
+        new Random().nextBytes(bytes);
+        return Arrays.toString(bytes);
+    }
+
+    private static String longRandomString() {
+        byte[] bytes = new byte[1024 * 1024];
+        new Random().nextBytes(bytes);
+        return Arrays.toString(bytes);
     }
 
     private static class TestClient extends WorkDaemon<String> {
@@ -167,8 +219,12 @@ class MainTest {
             }
         }
 
-        public String readline() throws InterruptedException {
+        public String readNull() throws InterruptedException {
             return sock.isClosed() || !sock.isConnected() ? null : lineQueue.poll(50, TimeUnit.MILLISECONDS);
+        }
+
+        public String readLine() throws InterruptedException {
+            return sock.isClosed() || !sock.isConnected() ? null : lineQueue.poll(1000, TimeUnit.MILLISECONDS);
         }
     }
 }
