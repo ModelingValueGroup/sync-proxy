@@ -10,7 +10,7 @@
   <version>1.0.0</version>
   <packaging>jar</packaging>
   <scm>
-    <url>https://maven.pkg.github.com/ModelingValueGroup/template-java</url>
+    <url>https://maven.pkg.github.com/ModelingValueGroup/sync-proxy</url>
   </scm>
   <dependencies>
     <dependency>
