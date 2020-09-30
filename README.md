@@ -1,10 +1,12 @@
-# template-java
-Skeleton for a java project.
+# sync-proxy
+This proxy serves as a common point to connect to for multiple parties 
+(presumably behind firwalls) 
+so that they can communicate with each other.
+This proxy will run a dedicated port.
+When a client connects it will receive all traffic from other parties and what it sends will be send to all.
 
 ## maven dependencies
 To get all the dependencies in your ```lib``` folder: use the following commands:
 ````bash
-mvn dependency:copy-dependencies -Dmdep.stripVersion=true -DoutputDirectory=lib
-mvn dependency:copy-dependencies -Dmdep.stripVersion=true -DoutputDirectory=lib -Dclassifier=javadoc
-mvn dependency:copy-dependencies -Dmdep.stripVersion=true -DoutputDirectory=lib -Dclassifier=sources
+prepare.sh
 ````

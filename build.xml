@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project name="template-java" default="all">
+<project name="sync-proxy" default="all">
   <property file="build.properties"/>
   <!-- Uncomment the following property if no tests compilation is needed -->
   <!-- 
@@ -151,55 +151,55 @@
     <pathelement location="${basedir}/lib/opentest4j.jar"/>
   </path>
   <!-- Modules -->
-  <import file="${basedir}/helloworld/module_helloworld.xml"/>
+  <import file="${basedir}/sync-proxy/module_sync-proxy.xml"/>
   <target name="init" description="Build initialization">
     <!-- Perform any build initialization in this target -->
   </target>
-  <target name="clean" depends="clean.module.helloworld" description="cleanup all"/>
-  <target name="build.modules" depends="init, clean, compile.module.helloworld" description="build all modules"/>
+  <target name="clean" depends="clean.module.sync-proxy" description="cleanup all"/>
+  <target name="build.modules" depends="init, clean, compile.module.sync-proxy" description="build all modules"/>
   <target name="init.artifacts">
     <property name="artifacts.temp.dir" value="${basedir}/__artifacts_temp"/>
-    <property name="artifact.output.helloworld-sources:jar" value="${basedir}/out/artifacts"/>
-    <property name="artifact.output.helloworld:jar" value="${basedir}/out/artifacts"/>
+    <property name="artifact.output.sync-proxy-sources:jar" value="${basedir}/out/artifacts"/>
+    <property name="artifact.output.sync-proxy:jar" value="${basedir}/out/artifacts"/>
     <mkdir dir="${artifacts.temp.dir}"/>
-    <property name="temp.jar.path.helloworld-sources.jar" value="${artifacts.temp.dir}/helloworld-sources.jar"/>
-    <property name="temp.jar.path.helloworld.jar" value="${artifacts.temp.dir}/helloworld.jar"/>
+    <property name="temp.jar.path.sync-proxy-sources.jar" value="${artifacts.temp.dir}/sync-proxy-sources.jar"/>
+    <property name="temp.jar.path.sync-proxy.jar" value="${artifacts.temp.dir}/sync-proxy.jar"/>
   </target>
-  <target name="artifact.helloworld-sources:jar" depends="init.artifacts" description="Build 'helloworld-sources:jar' artifact">
-    <property name="artifact.temp.output.helloworld-sources:jar" value="${artifacts.temp.dir}/helloworld_sources_jar"/>
-    <mkdir dir="${artifact.temp.output.helloworld-sources:jar}"/>
-    <jar destfile="${temp.jar.path.helloworld-sources.jar}" duplicate="preserve" filesetmanifest="mergewithoutmain">
-      <zipfileset dir="${basedir}/helloworld/src"/>
-      <zipfileset dir="${basedir}/helloworld/tst"/>
+  <target name="artifact.sync-proxy-sources:jar" depends="init.artifacts" description="Build 'sync-proxy-sources:jar' artifact">
+    <property name="artifact.temp.output.sync-proxy-sources:jar" value="${artifacts.temp.dir}/sync_proxy_sources_jar"/>
+    <mkdir dir="${artifact.temp.output.sync-proxy-sources:jar}"/>
+    <jar destfile="${temp.jar.path.sync-proxy-sources.jar}" duplicate="preserve" filesetmanifest="mergewithoutmain">
+      <zipfileset dir="${basedir}/sync-proxy/src"/>
+      <zipfileset dir="${basedir}/sync-proxy/tst"/>
     </jar>
-    <copy file="${temp.jar.path.helloworld-sources.jar}" tofile="${artifact.temp.output.helloworld-sources:jar}/helloworld-sources.jar"/>
+    <copy file="${temp.jar.path.sync-proxy-sources.jar}" tofile="${artifact.temp.output.sync-proxy-sources:jar}/sync-proxy-sources.jar"/>
   </target>
-  <target name="artifact.helloworld:jar" depends="init.artifacts, compile.module.helloworld" description="Build 'helloworld:jar' artifact">
-    <property name="artifact.temp.output.helloworld:jar" value="${artifacts.temp.dir}/helloworld_jar"/>
-    <mkdir dir="${artifact.temp.output.helloworld:jar}"/>
-    <jar destfile="${temp.jar.path.helloworld.jar}" duplicate="preserve" filesetmanifest="mergewithoutmain">
-      <zipfileset file="${basedir}/helloworld/src/META-INF/MANIFEST.MF" prefix="META-INF"/>
-      <zipfileset dir="${helloworld.output.dir}"/>
+  <target name="artifact.sync-proxy:jar" depends="init.artifacts, compile.module.sync-proxy" description="Build 'sync-proxy:jar' artifact">
+    <property name="artifact.temp.output.sync-proxy:jar" value="${artifacts.temp.dir}/sync_proxy_jar"/>
+    <mkdir dir="${artifact.temp.output.sync-proxy:jar}"/>
+    <jar destfile="${temp.jar.path.sync-proxy.jar}" duplicate="preserve" filesetmanifest="mergewithoutmain">
+      <zipfileset file="${basedir}/sync-proxy/src/META-INF/MANIFEST.MF" prefix="META-INF"/>
+      <zipfileset dir="${sync-proxy.output.dir}"/>
     </jar>
-    <copy file="${temp.jar.path.helloworld.jar}" tofile="${artifact.temp.output.helloworld:jar}/helloworld.jar"/>
+    <copy file="${temp.jar.path.sync-proxy.jar}" tofile="${artifact.temp.output.sync-proxy:jar}/sync-proxy.jar"/>
   </target>
-  <target name="build.all.artifacts" depends="artifact.helloworld-sources:jar, artifact.helloworld:jar" description="Build all artifacts">
-    <mkdir dir="${artifact.output.helloworld-sources:jar}"/>
-    <copy todir="${artifact.output.helloworld-sources:jar}">
-      <fileset dir="${artifact.temp.output.helloworld-sources:jar}"/>
+  <target name="build.all.artifacts" depends="artifact.sync-proxy-sources:jar, artifact.sync-proxy:jar" description="Build all artifacts">
+    <mkdir dir="${artifact.output.sync-proxy-sources:jar}"/>
+    <copy todir="${artifact.output.sync-proxy-sources:jar}">
+      <fileset dir="${artifact.temp.output.sync-proxy-sources:jar}"/>
     </copy>
-    <mkdir dir="${artifact.output.helloworld:jar}"/>
-    <copy todir="${artifact.output.helloworld:jar}">
-      <fileset dir="${artifact.temp.output.helloworld:jar}"/>
+    <mkdir dir="${artifact.output.sync-proxy:jar}"/>
+    <copy todir="${artifact.output.sync-proxy:jar}">
+      <fileset dir="${artifact.temp.output.sync-proxy:jar}"/>
     </copy>
     <!-- Delete temporary files -->
     <delete dir="${artifacts.temp.dir}"/>
   </target>
   <target name="all" depends="build.modules, build.all.artifacts" description="build all"/>
-  <target name="test" depends="testresults.module.helloworld">
+  <target name="test" depends="testresults.module.sync-proxy">
     <echo>all done for test</echo>
   </target>
-  <target name="javadoc" depends="javadoc.module.helloworld">
+  <target name="javadoc" depends="javadoc.module.sync-proxy">
     <echo>all done for javadoc</echo>
   </target>
 </project>

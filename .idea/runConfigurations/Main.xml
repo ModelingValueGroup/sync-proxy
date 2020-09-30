@@ -1,7 +1,7 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="Main" type="Application" factoryName="Application" nameIsGenerated="true">
-    <option name="MAIN_CLASS_NAME" value="template.Main" />
-    <module name="helloworld" />
+    <option name="MAIN_CLASS_NAME" value="org.modelingvalue.syncproxy.Main" />
+    <module name="sync-proxy" />
     <extension name="coverage">
       <pattern>
         <option name="PATTERN" value="template.*" />
