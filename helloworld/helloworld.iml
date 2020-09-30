@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="JAVA_MODULE" version="4">
+  <component name="NewModuleRootManager" inherit-compiler-output="true">
+    <exclude-output />
+    <content url="file://$MODULE_DIR$/../helloworld">
+      <sourceFolder url="file://$MODULE_DIR$/../helloworld/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/../helloworld/tst" isTestSource="true" />
+    </content>
+    <orderEntry type="inheritedJdk" />
+    <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="library" scope="TEST" name="gen: apiguardian-api" level="project" />
+    <orderEntry type="library" scope="TEST" name="gen: junit-jupiter-api" level="project" />
+    <orderEntry type="library" scope="TEST" name="gen: junit-jupiter-engine" level="project" />
+    <orderEntry type="library" scope="TEST" name="gen: junit-platform-commons" level="project" />
+    <orderEntry type="library" scope="TEST" name="gen: junit-platform-engine" level="project" />
+    <orderEntry type="library" scope="TEST" name="gen: junit-platform-launcher" level="project" />
+    <orderEntry type="library" scope="TEST" name="gen: opentest4j" level="project" />
+  </component>
+</module>

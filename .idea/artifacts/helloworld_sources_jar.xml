@@ -1,0 +1,9 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="helloworld-sources:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts</output-path>
+    <root id="archive" name="helloworld-sources.jar">
+      <element id="dir-copy" path="$PROJECT_DIR$/helloworld/src" />
+      <element id="dir-copy" path="$PROJECT_DIR$/helloworld/tst" />
+    </root>
+  </artifact>
+</component>

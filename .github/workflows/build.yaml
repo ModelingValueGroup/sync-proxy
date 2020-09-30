@@ -1,0 +1,121 @@
+name: build
+
+on: [push]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-20.04 # use preview for now, on 18.04 errors will occur
+
+    steps:
+      - name: "checkout"
+        uses: actions/checkout@v1
+
+      - name: "attach git head"
+        run: git checkout "${GITHUB_REF#refs/heads/}"
+
+      - name: "setup JDK"
+        uses: actions/setup-java@v1
+        with:
+          java-version: 11
+
+      - name: "get generic mvg-info"
+        uses: ModelingValueGroup/generic-info@master
+
+      - name: "get buildTools"
+        uses: ModelingValueGroup/buildTools@master
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: "if master: fail if there is already a tag for this version"
+        run:  |
+          . <(java -jar ~/buildTools.jar)
+          errorIfMasterAndVersionTagExists
+
+      - name: "prepare ant"
+        run:  |
+          cat <<EOF >build.properties
+          jdk.home.11=$JAVA_HOME
+          path.variable.maven_repository=$HOME/.m2/repository
+          EOF
+
+      - name: "(re)generate some files"
+        run:  |
+          . <(java -jar ~/buildTools.jar)
+          generateAll
+          correctEols
+          correctHeaders header
+
+      - name: "push changes back to github"
+        run:  |
+          . <(java -jar ~/buildTools.jar)
+          pushBackToGithub "${{ secrets.GITHUB_TOKEN }}" "automation@modelingvalue.com" "adjusted files [by github actions]"
+
+      - name: "download dependencies (as mentioned in pom)"
+        run:  |
+          . <(java -jar ~/buildTools.jar)
+          getAllDependencies "${{ secrets.GITHUB_TOKEN }}" "${{ secrets.SCALEWAY_ACCESS_KEY }}" "${{ secrets.SCALEWAY_SECRET_KEY }}"
+
+      - name: "build"
+        run:  ant
+
+      - name: "test"
+        run:  |
+          if ! ant test; then
+            for i in TEST-*.xml; do
+              echo "=============== $i"
+              sed "s/^/>> /" $i
+            done
+            exit 42
+          fi
+
+      - name: "generate javadoc"
+        run:  ant javadoc
+
+      - name: "if master: tag with version"
+        run:  |
+          . <(java -jar ~/buildTools.jar)
+          setVersionTagIfMaster "${{ secrets.GITHUB_TOKEN }}" "automation@modelingvalue.com"
+
+      - name: "publish action-artifact jar"
+        uses: actions/upload-artifact@v1
+        with:
+          name: helloworld.jar
+          path: out/artifacts/helloworld.jar
+
+      - name: "publish action-artifact sources"
+        uses: actions/upload-artifact@v1
+        with:
+          name: helloworld-sources.jar
+          path: out/artifacts/helloworld-sources.jar
+
+      - name: "publish action-artifact javadoc"
+        uses: actions/upload-artifact@v1
+        with:
+          name: helloworld-javadoc.jar
+          path: out/artifacts/helloworld-javadoc.jar
+
+      - name: "publish action-artifact test-results"
+        uses: actions/upload-artifact@v1
+        with:
+          name: helloworld-testresults.jar
+          path: out/artifacts/helloworld-testresults.jar
+
+      - name: "publish jars on S3"
+        uses: ModelingValueGroup/sync-s3-action@master
+        with:
+          token          : "${{ secrets.GITHUB_TOKEN }}"
+          access_key     : "${{ secrets.SCALEWAY_ACCESS_KEY }}"
+          secret_key     : "${{ secrets.SCALEWAY_SECRET_KEY }}"
+          trigger_token  : "${{ secrets.RETRIGGER_TOKEN }}"
+          bucket         : "mvg-artifacts"
+          cmd            : "put"
+          local_dir      : "out/artifacts"
+          s3_dir_branched: "/"
+
+      - name: "if master: publish maven-artifacts (jar/pom/sources/javadoc)"
+        uses: ModelingValueGroup/upload-maven-package-action@master
+        if  : github.ref == 'refs/heads/master'
+        with:
+          file : "out/artifacts/helloworld.jar"
+          token: "${{ secrets.GITHUB_TOKEN }}"

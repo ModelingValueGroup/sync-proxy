@@ -1,0 +1,20 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="MainTest.main" type="JUnit" factoryName="JUnit" nameIsGenerated="true">
+    <module name="helloworld" />
+    <useClassPathOnly />
+    <extension name="coverage">
+      <pattern>
+        <option name="PATTERN" value="template.*" />
+        <option name="ENABLED" value="true" />
+      </pattern>
+    </extension>
+    <option name="PACKAGE_NAME" value="template" />
+    <option name="MAIN_CLASS_NAME" value="template.MainTest" />
+    <option name="METHOD_NAME" value="main" />
+    <option name="TEST_OBJECT" value="method" />
+    <option name="PARAMETERS" value="" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>
