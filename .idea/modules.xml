@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/helloworld/helloworld.iml" filepath="$PROJECT_DIR$/helloworld/helloworld.iml" />
+      <module fileurl="file://$PROJECT_DIR$/sync-proxy/sync-proxy.iml" filepath="$PROJECT_DIR$/sync-proxy/sync-proxy.iml" />
     </modules>
   </component>
 </project>

@@ -80,26 +80,26 @@ jobs:
       - name: "publish action-artifact jar"
         uses: actions/upload-artifact@v1
         with:
-          name: helloworld.jar
-          path: out/artifacts/helloworld.jar
+          name: sync-proxy.jar
+          path: out/artifacts/sync-proxy.jar
 
       - name: "publish action-artifact sources"
         uses: actions/upload-artifact@v1
         with:
-          name: helloworld-sources.jar
-          path: out/artifacts/helloworld-sources.jar
+          name: sync-proxy-sources.jar
+          path: out/artifacts/sync-proxy-sources.jar
 
       - name: "publish action-artifact javadoc"
         uses: actions/upload-artifact@v1
         with:
-          name: helloworld-javadoc.jar
-          path: out/artifacts/helloworld-javadoc.jar
+          name: sync-proxy-javadoc.jar
+          path: out/artifacts/sync-proxy-javadoc.jar
 
       - name: "publish action-artifact test-results"
         uses: actions/upload-artifact@v1
         with:
-          name: helloworld-testresults.jar
-          path: out/artifacts/helloworld-testresults.jar
+          name: sync-proxy-testresults.jar
+          path: out/artifacts/sync-proxy-testresults.jar
 
       - name: "publish jars on S3"
         uses: ModelingValueGroup/sync-s3-action@master
@@ -117,5 +117,5 @@ jobs:
         uses: ModelingValueGroup/upload-maven-package-action@master
         if  : github.ref == 'refs/heads/master'
         with:
-          file : "out/artifacts/helloworld.jar"
+          file : "out/artifacts/sync-proxy.jar"
           token: "${{ secrets.GITHUB_TOKEN }}"
