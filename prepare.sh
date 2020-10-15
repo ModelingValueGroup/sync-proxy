@@ -23,7 +23,7 @@ set -ue
 
 . ~/secrets.sh # for $INPUT_TOKEN
 
-echo "## downloading buildTools..."
+echo "## downloading buildtools..."
 curl \
         --location \
         --remote-header-name \
@@ -31,14 +31,14 @@ curl \
         --fail \
         --silent \
         --show-error \
-        "https://github.com/ModelingValueGroup/buildTools/releases/latest/download/buildTools.jar"
-mv buildTools.jar ~/buildTools.jar
+        "https://github.com/ModelingValueGroup/buildtools/releases/latest/download/buildtools.jar"
+mv buildtools.jar ~/buildtools.jar
 
 echo "## clearing out lib folder..."
 rm -f lib/*.jar lib/*.pom
 
 echo "## generate pom from project.sh..."
-. <(java -jar ~/buildTools.jar)
+. <(java -jar ~/buildtools.jar)
 generateAll
 
 echo "## get dependencies from maven..."
