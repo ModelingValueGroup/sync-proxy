@@ -135,4 +135,4 @@ jobs:
       - name: "publish maven-artifacts (jar/pom/sources/javadoc)"
         uses: ModelingValueGroup/upload-maven-package-action@master
         with:
-          file: "sync-proxy.jar"
+          file: "sync-proxy.jar/sync-proxy.jar"
