@@ -23,7 +23,7 @@
 #       s = sources
 #       t = test
 #===================================================================
-version=2.0.0
+version=2.0.1
 artifacts=(
   "org.modelingvalue   sync-proxy              $version    jar jds"
 )
