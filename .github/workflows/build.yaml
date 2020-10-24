@@ -2,16 +2,18 @@ name: build
 
 on: [push]
 
+env:
+  GITHUB_TOKEN: "${{secrets.GITHUB_TOKEN}}"
+  ALLREP_TOKEN: "${{secrets.ALLREP_TOKEN}}"
+
 jobs:
   build:
     runs-on: ubuntu-20.04
-    env:
-      GITHUB_TOKEN: "${{secrets.GITHUB_TOKEN}}"
     steps:
       - name: "checkout"
         uses: actions/checkout@v1
 
-      - name: "attach git head"
+      - name: "attach head"
         run: git checkout "${GITHUB_REF#refs/heads/}"
 
       - name: "setup JDK"
@@ -19,23 +21,20 @@ jobs:
         with:
           java-version: 11
 
-      - name: "get generic mvg-info"
-        uses: ModelingValueGroup/generic-info@master
-
       - name: "get buildtools"
         uses: ModelingValueGroup/buildtools@master
 
-      - name: "prepare ant"
-        run:  |
-          cat <<EOF >build.properties
-          jdk.home.11=$JAVA_HOME
-          path.variable.maven_repository=$HOME/.m2/repository
-          EOF
+      - name: "get generic info" # for header file used below
+        uses: ModelingValueGroup/generic-info@master
 
       - name: "(re)generate some files"
         run:  |
           . <(java -jar ~/buildtools.jar)
           generateAll
+          cat <<EOF >build.properties
+          jdk.home.11=$JAVA_HOME
+          path.variable.maven_repository=$HOME/.m2/repository
+          EOF
           correctEols
           correctHeaders header
 
@@ -44,6 +43,7 @@ jobs:
           . <(java -jar ~/buildtools.jar)
           pushBackToGithub
 
+      #=========== build & test: ===================================================================
       - name: "download dependencies (as mentioned in pom)"
         run:  |
           . <(java -jar ~/buildtools.jar)
@@ -66,6 +66,7 @@ jobs:
       - name: "generate javadoc"
         run:  ant javadoc
 
+      #=========== publish: ===================================================================
       - name: "publish action-artifact jar"
         uses: actions/upload-artifact@v1
         with:
@@ -90,20 +91,45 @@ jobs:
           name: sync-proxy-testresults.jar
           path: out/artifacts/sync-proxy-testresults.jar
 
-      - name: "if NOT master: saving snapshots for other projects on this branch"
-        if: github.ref != 'refs/heads/master'
+  snapshots:
+    runs-on: ubuntu-20.04
+    if: github.ref != 'refs/heads/master'
+    needs: build
+    steps:
+      - name: "checkout"
+        uses: actions/checkout@v1
+
+      - name: "get buildtools"
+        uses: ModelingValueGroup/buildtools@master
+
+      - name: "get downloads"
+        uses: actions/download-artifact@v2
+
+      - name: "saving snapshots for other projects on this branch"
         run: |
           . <(java -jar ~/buildtools.jar)
+          ls -lR
+          mkdir -p out/artifacts
+          mv */sync-proxy*.jar out/artifacts
           storeMyBranchSnapshots
 
-      - name: "if master: tag with version"
-        if: github.ref == 'refs/heads/master'
+  publish:
+    runs-on: ubuntu-20.04
+    if: github.ref == 'refs/heads/master'
+    needs: build
+    steps:
+      - name: "get buildtools"
+        uses: ModelingValueGroup/buildtools@master
+
+      - name: "get downloads"
+        uses: actions/download-artifact@v2
+
+      - name: "tag with version"
         run: |
           . <(java -jar ~/buildtools.jar)
           setVersionTag
 
-      - name: "if master: publish maven-artifacts (jar/pom/sources/javadoc)"
+      - name: "publish maven-artifacts (jar/pom/sources/javadoc)"
         uses: ModelingValueGroup/upload-maven-package-action@master
-        if  : github.ref == 'refs/heads/master'
         with:
-          file : "out/artifacts/sync-proxy.jar"
+          file: "sync-proxy.jar"
