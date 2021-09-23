@@ -168,7 +168,7 @@
   <target name="artifact.sync-proxy-sources:jar" depends="init.artifacts" description="Build 'sync-proxy-sources:jar' artifact">
     <property name="artifact.temp.output.sync-proxy-sources:jar" value="${artifacts.temp.dir}/sync_proxy_sources_jar"/>
     <mkdir dir="${artifact.temp.output.sync-proxy-sources:jar}"/>
-    <jar destfile="${temp.jar.path.sync-proxy-sources.jar}" duplicate="preserve" filesetmanifest="mergewithoutmain">
+    <jar destfile="${temp.jar.path.sync-proxy-sources.jar}" duplicate="preserve" filesetmanifest="merge">
       <zipfileset dir="${basedir}/sync-proxy/src"/>
       <zipfileset dir="${basedir}/sync-proxy/tst"/>
     </jar>
@@ -177,7 +177,7 @@
   <target name="artifact.sync-proxy:jar" depends="init.artifacts, compile.module.sync-proxy" description="Build 'sync-proxy:jar' artifact">
     <property name="artifact.temp.output.sync-proxy:jar" value="${artifacts.temp.dir}/sync_proxy_jar"/>
     <mkdir dir="${artifact.temp.output.sync-proxy:jar}"/>
-    <jar destfile="${temp.jar.path.sync-proxy.jar}" duplicate="preserve" filesetmanifest="mergewithoutmain">
+    <jar destfile="${temp.jar.path.sync-proxy.jar}" duplicate="preserve" filesetmanifest="merge">
       <zipfileset file="${basedir}/sync-proxy/src/META-INF/MANIFEST.MF" prefix="META-INF"/>
       <zipfileset dir="${sync-proxy.output.dir}"/>
     </jar>
