@@ -100,6 +100,7 @@ public class Main {
         clientList.forEach(SockReader::close);
         while (clientList.stream().anyMatch(Thread::isAlive)) {
             try {
+                //noinspection BusyWait
                 Thread.sleep(1);
             } catch (InterruptedException e) {
                 e.printStackTrace();
