@@ -27,15 +27,15 @@ import java.util.Arrays;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.RepeatedTest;
 
+@SuppressWarnings("BusyWait")
 class MainTest {
     @RepeatedTest(20)
-    void checkThreads() throws IOException, InterruptedException, ExecutionException {
+    void checkThreads() throws IOException, InterruptedException {
         Set<Thread> initialThreads = Thread.getAllStackTraces().keySet();
 
         Main       main       = new Main(0);
@@ -67,7 +67,7 @@ class MainTest {
     }
 
     @RepeatedTest(20)
-    void twoClientsA() throws IOException, InterruptedException, ExecutionException {
+    void twoClientsA() throws IOException, InterruptedException {
         Main       main       = new Main(0);
         int        actualPort = main.getPort();
         TestClient c0         = new TestClient(actualPort);
@@ -96,7 +96,7 @@ class MainTest {
     }
 
     @RepeatedTest(20)
-    void twoClientsB() throws IOException, InterruptedException, ExecutionException {
+    void twoClientsB() throws IOException, InterruptedException {
         Main       main       = new Main(0);
         int        actualPort = main.getPort();
         TestClient c0         = new TestClient(actualPort);
@@ -123,7 +123,7 @@ class MainTest {
     }
 
     @RepeatedTest(20)
-    void longString() throws IOException, InterruptedException, ExecutionException {
+    void longString() throws IOException, InterruptedException {
         Main       main       = new Main(0);
         int        actualPort = main.getPort();
         TestClient c0         = new TestClient(actualPort);
@@ -146,7 +146,7 @@ class MainTest {
     }
 
     @RepeatedTest(20)
-    void manyStrings() throws IOException, InterruptedException, ExecutionException {
+    void manyStrings() throws IOException, InterruptedException {
         Main       main       = new Main(0);
         int        actualPort = main.getPort();
         TestClient c0         = new TestClient(actualPort);
@@ -171,7 +171,7 @@ class MainTest {
     }
 
     @RepeatedTest(20)
-    void threeClients() throws IOException, InterruptedException, ExecutionException {
+    void threeClients() throws IOException, InterruptedException {
         Main main       = new Main(0);
         int  actualPort = main.getPort();
 
@@ -219,7 +219,7 @@ class MainTest {
         private final PrintWriter           out;
         private final BlockingQueue<String> lineQueue = new LinkedBlockingQueue<>();
 
-        public TestClient(int port) throws IOException, ExecutionException, InterruptedException {
+        public TestClient(int port) throws IOException {
             super("SyncProxy-tester");
             sock = new Socket((String) null, port);
             in   = new BufferedReader(new InputStreamReader(sock.getInputStream()));
