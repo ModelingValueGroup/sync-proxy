@@ -15,10 +15,16 @@
 
 package org.modelingvalue.syncproxy;
 
-import java.io.*;
-import java.net.*;
-import java.util.*;
-import java.util.stream.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class Main {
     private static final boolean VERBOSE = Boolean.getBoolean("VERBOSE");
@@ -44,7 +50,7 @@ public class Main {
 
     public Main(int port) throws IOException {
         listenSocket = new ServerSocket(port);
-        this.port = listenSocket.getLocalPort();
+        this.port    = listenSocket.getLocalPort();
         listenThread = new Thread(() -> {
             if (VERBOSE) {
                 System.err.println("listening for clients on port " + this.port + "...");
@@ -88,6 +94,10 @@ public class Main {
         return connectionSet.stream().filter(sr -> !sr.equals(except)).collect(Collectors.toList());
     }
 
+    public int getNumClients() {
+        return connectionSet.size();
+    }
+
     public void close() {
         closingRequested = true;
         try {
@@ -116,8 +126,8 @@ public class Main {
         public SockReader(Socket sock, int i) throws IOException {
             super("SyncProxyReader-" + i);
             this.sock = sock;
-            this.in = new BufferedReader(new InputStreamReader(sock.getInputStream()));
-            this.out = new PrintWriter(sock.getOutputStream(), true);
+            this.in   = new BufferedReader(new InputStreamReader(sock.getInputStream()));
+            this.out  = new PrintWriter(sock.getOutputStream(), true);
             start();
         }
 

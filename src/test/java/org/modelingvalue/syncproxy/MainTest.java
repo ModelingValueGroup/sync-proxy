@@ -15,24 +15,37 @@
 
 package org.modelingvalue.syncproxy;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
-import java.io.*;
-import java.net.*;
-import java.util.*;
-import java.util.concurrent.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.net.Socket;
+import java.util.Arrays;
+import java.util.Random;
+import java.util.Set;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.RepeatedTest;
 
 class MainTest {
-    @RepeatedTest(1)
-    void checkThreads() throws IOException, InterruptedException {
+    @RepeatedTest(20)
+    void checkThreads() throws IOException, InterruptedException, ExecutionException {
         Set<Thread> initialThreads = Thread.getAllStackTraces().keySet();
 
         Main       main       = new Main(0);
         int        actualPort = main.getPort();
         TestClient c0         = new TestClient(actualPort);
         TestClient c1         = new TestClient(actualPort);
+
+        while (main.getNumClients() != 2) {
+            Thread.sleep(1);
+        }
 
         c0.writeLine("haystack1");
         assertEquals("haystack1", c1.readLine());
@@ -53,12 +66,16 @@ class MainTest {
         return Thread.getAllStackTraces().keySet().stream().filter(t -> !initialThreads.contains(t)).count();
     }
 
-    @RepeatedTest(1)
-    void twoClientsA() throws IOException, InterruptedException {
+    @RepeatedTest(20)
+    void twoClientsA() throws IOException, InterruptedException, ExecutionException {
         Main       main       = new Main(0);
         int        actualPort = main.getPort();
         TestClient c0         = new TestClient(actualPort);
         TestClient c1         = new TestClient(actualPort);
+
+        while (main.getNumClients() != 2) {
+            Thread.sleep(1);
+        }
 
         c0.writeLine("haystack1");
         assertEquals("haystack1", c1.readLine());
@@ -78,12 +95,16 @@ class MainTest {
         c1.interrupt();
     }
 
-    @RepeatedTest(1)
-    void twoClientsB() throws IOException, InterruptedException {
+    @RepeatedTest(20)
+    void twoClientsB() throws IOException, InterruptedException, ExecutionException {
         Main       main       = new Main(0);
         int        actualPort = main.getPort();
         TestClient c0         = new TestClient(actualPort);
         TestClient c1         = new TestClient(actualPort);
+
+        while (main.getNumClients() != 2) {
+            Thread.sleep(1);
+        }
 
         c0.writeLine("haystack1");
         c1.writeLine("haystack2");
@@ -101,12 +122,16 @@ class MainTest {
         c1.interrupt();
     }
 
-    @RepeatedTest(1)
-    void longString() throws IOException, InterruptedException {
+    @RepeatedTest(20)
+    void longString() throws IOException, InterruptedException, ExecutionException {
         Main       main       = new Main(0);
         int        actualPort = main.getPort();
         TestClient c0         = new TestClient(actualPort);
         TestClient c1         = new TestClient(actualPort);
+
+        while (main.getNumClients() != 2) {
+            Thread.sleep(1);
+        }
 
         String s0 = longRandomString();
         String s1 = longRandomString();
@@ -120,12 +145,16 @@ class MainTest {
         c1.interrupt();
     }
 
-    @RepeatedTest(1)
-    void manyStrings() throws IOException, InterruptedException {
+    @RepeatedTest(20)
+    void manyStrings() throws IOException, InterruptedException, ExecutionException {
         Main       main       = new Main(0);
         int        actualPort = main.getPort();
         TestClient c0         = new TestClient(actualPort);
         TestClient c1         = new TestClient(actualPort);
+
+        while (main.getNumClients() != 2) {
+            Thread.sleep(1);
+        }
 
         for (int i = 0; i < 1000; i++) {
             String s0 = mediumRandomString();
@@ -141,13 +170,18 @@ class MainTest {
         c1.interrupt();
     }
 
-    @RepeatedTest(1)
-    void threeClients() throws IOException, InterruptedException {
-        Main       main       = new Main(0);
-        int        actualPort = main.getPort();
-        TestClient c0         = new TestClient(actualPort);
-        TestClient c1         = new TestClient(actualPort);
-        TestClient c2         = new TestClient(actualPort);
+    @RepeatedTest(20)
+    void threeClients() throws IOException, InterruptedException, ExecutionException {
+        Main main       = new Main(0);
+        int  actualPort = main.getPort();
+
+        TestClient c0 = new TestClient(actualPort);
+        TestClient c1 = new TestClient(actualPort);
+        TestClient c2 = new TestClient(actualPort);
+
+        while (main.getNumClients() != 3) {
+            Thread.sleep(1);
+        }
 
         c0.writeLine("haystack1");
         assertEquals("haystack1", c1.readLine());
@@ -185,11 +219,11 @@ class MainTest {
         private final PrintWriter           out;
         private final BlockingQueue<String> lineQueue = new LinkedBlockingQueue<>();
 
-        public TestClient(int port) throws IOException {
+        public TestClient(int port) throws IOException, ExecutionException, InterruptedException {
             super("SyncProxy-tester");
-            sock = new Socket("localhost", port);
-            in = new BufferedReader(new InputStreamReader(sock.getInputStream()));
-            out = new PrintWriter(sock.getOutputStream(), true);
+            sock = new Socket((String) null, port);
+            in   = new BufferedReader(new InputStreamReader(sock.getInputStream()));
+            out  = new PrintWriter(sock.getOutputStream(), true);
             start();
         }
 
@@ -227,4 +261,5 @@ class MainTest {
             return sock.isClosed() || !sock.isConnected() ? null : lineQueue.poll(1000, TimeUnit.MILLISECONDS);
         }
     }
+
 }
