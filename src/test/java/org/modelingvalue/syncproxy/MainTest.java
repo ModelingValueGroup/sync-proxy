@@ -17,18 +17,21 @@ package org.modelingvalue.syncproxy;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.time.Duration;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Random;
-import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.RepeatedTest;
 
@@ -36,16 +39,14 @@ import org.junit.jupiter.api.RepeatedTest;
 class MainTest {
     @RepeatedTest(20)
     void checkThreads() throws IOException, InterruptedException {
-        Set<Thread> initialThreads = Thread.getAllStackTraces().keySet();
+        List<String> initialThreads = getCurrentThreadNames();
 
         Main       main       = new Main(0);
         int        actualPort = main.getPort();
         TestClient c0         = new TestClient(actualPort);
         TestClient c1         = new TestClient(actualPort);
 
-        while (main.getNumClients() != 2) {
-            Thread.sleep(1);
-        }
+        assertNumClientsAfterAWhile(main, 2);
 
         c0.writeLine("haystack1");
         assertEquals("haystack1", c1.readLine());
@@ -53,29 +54,22 @@ class MainTest {
         c1.writeLine("haystack2");
         assertEquals("haystack2", c0.readLine());
 
-        assertEquals(5, getThreadCount(initialThreads));
-
+        assertExcessThreadsAfterAWhile(initialThreads, 5);
         main.close();
         c0.interrupt();
         c1.interrupt();
-
-        assertEquals(0, getThreadCount(initialThreads));
-    }
-
-    private long getThreadCount(Set<Thread> initialThreads) {
-        return Thread.getAllStackTraces().keySet().stream().filter(t -> !initialThreads.contains(t)).count();
+        assertExcessThreadsAfterAWhile(initialThreads, 0);
     }
 
     @RepeatedTest(20)
     void twoClientsA() throws IOException, InterruptedException {
-        Main       main       = new Main(0);
-        int        actualPort = main.getPort();
-        TestClient c0         = new TestClient(actualPort);
-        TestClient c1         = new TestClient(actualPort);
+        List<String> initialThreads = getCurrentThreadNames();
+        Main         main           = new Main(0);
+        int          actualPort     = main.getPort();
+        TestClient   c0             = new TestClient(actualPort);
+        TestClient   c1             = new TestClient(actualPort);
 
-        while (main.getNumClients() != 2) {
-            Thread.sleep(1);
-        }
+        assertNumClientsAfterAWhile(main, 2);
 
         c0.writeLine("haystack1");
         assertEquals("haystack1", c1.readLine());
@@ -83,6 +77,7 @@ class MainTest {
         c1.writeLine("haystack2");
         assertEquals("haystack2", c0.readLine());
 
+        assertExcessThreadsAfterAWhile(initialThreads, 5);
         main.close();
 
         c0.writeLine("closed");
@@ -93,24 +88,25 @@ class MainTest {
 
         c0.interrupt();
         c1.interrupt();
+        assertExcessThreadsAfterAWhile(initialThreads, 0);
     }
 
     @RepeatedTest(20)
     void twoClientsB() throws IOException, InterruptedException {
-        Main       main       = new Main(0);
-        int        actualPort = main.getPort();
-        TestClient c0         = new TestClient(actualPort);
-        TestClient c1         = new TestClient(actualPort);
+        List<String> initialThreads = getCurrentThreadNames();
+        Main         main           = new Main(0);
+        int          actualPort     = main.getPort();
+        TestClient   c0             = new TestClient(actualPort);
+        TestClient   c1             = new TestClient(actualPort);
 
-        while (main.getNumClients() != 2) {
-            Thread.sleep(1);
-        }
+        assertNumClientsAfterAWhile(main, 2);
 
         c0.writeLine("haystack1");
         c1.writeLine("haystack2");
         assertEquals("haystack1", c1.readLine());
         assertEquals("haystack2", c0.readLine());
 
+        assertExcessThreadsAfterAWhile(initialThreads, 5);
         main.close();
 
         c0.writeLine("closed");
@@ -120,18 +116,18 @@ class MainTest {
 
         c0.interrupt();
         c1.interrupt();
+        assertExcessThreadsAfterAWhile(initialThreads, 0);
     }
 
     @RepeatedTest(20)
     void longString() throws IOException, InterruptedException {
-        Main       main       = new Main(0);
-        int        actualPort = main.getPort();
-        TestClient c0         = new TestClient(actualPort);
-        TestClient c1         = new TestClient(actualPort);
+        List<String> initialThreads = getCurrentThreadNames();
+        Main         main           = new Main(0);
+        int          actualPort     = main.getPort();
+        TestClient   c0             = new TestClient(actualPort);
+        TestClient   c1             = new TestClient(actualPort);
 
-        while (main.getNumClients() != 2) {
-            Thread.sleep(1);
-        }
+        assertNumClientsAfterAWhile(main, 2);
 
         String s0 = longRandomString();
         String s1 = longRandomString();
@@ -140,21 +136,22 @@ class MainTest {
         assertEquals(s0, c1.readLine());
         assertEquals(s1, c0.readLine());
 
+        assertExcessThreadsAfterAWhile(initialThreads, 5);
         main.close();
         c0.interrupt();
         c1.interrupt();
+        assertExcessThreadsAfterAWhile(initialThreads, 0);
     }
 
     @RepeatedTest(20)
     void manyStrings() throws IOException, InterruptedException {
-        Main       main       = new Main(0);
-        int        actualPort = main.getPort();
-        TestClient c0         = new TestClient(actualPort);
-        TestClient c1         = new TestClient(actualPort);
+        List<String> initialThreads = getCurrentThreadNames();
+        Main         main           = new Main(0);
+        int          actualPort     = main.getPort();
+        TestClient   c0             = new TestClient(actualPort);
+        TestClient   c1             = new TestClient(actualPort);
 
-        while (main.getNumClients() != 2) {
-            Thread.sleep(1);
-        }
+        assertNumClientsAfterAWhile(main, 2);
 
         for (int i = 0; i < 1000; i++) {
             String s0 = mediumRandomString();
@@ -165,23 +162,24 @@ class MainTest {
             assertEquals(s1, c0.readLine());
         }
 
+        assertExcessThreadsAfterAWhile(initialThreads, 5);
         main.close();
         c0.interrupt();
         c1.interrupt();
+        assertExcessThreadsAfterAWhile(initialThreads, 0);
     }
 
     @RepeatedTest(20)
     void threeClients() throws IOException, InterruptedException {
-        Main main       = new Main(0);
-        int  actualPort = main.getPort();
+        List<String> initialThreads = getCurrentThreadNames();
+        Main         main           = new Main(0);
+        int          actualPort     = main.getPort();
 
         TestClient c0 = new TestClient(actualPort);
         TestClient c1 = new TestClient(actualPort);
         TestClient c2 = new TestClient(actualPort);
 
-        while (main.getNumClients() != 3) {
-            Thread.sleep(1);
-        }
+        assertNumClientsAfterAWhile(main, 3);
 
         c0.writeLine("haystack1");
         assertEquals("haystack1", c1.readLine());
@@ -195,10 +193,49 @@ class MainTest {
         assertEquals("haystack3", c0.readLine());
         assertEquals("haystack3", c1.readLine());
 
+        assertExcessThreadsAfterAWhile(initialThreads, 7);
         main.close();
         c0.interrupt();
         c1.interrupt();
         c2.interrupt();
+        assertExcessThreadsAfterAWhile(initialThreads, 0);
+    }
+
+    private List<String> getCurrentThreadNames() {
+        return Thread.getAllStackTraces().keySet().stream()
+                .map(Thread::getName)
+                .filter(n -> !n.matches("junit-timeout-thread.*"))
+                .sorted()
+                .collect(Collectors.toList());
+    }
+
+    private void assertNumClientsAfterAWhile(Main main, int expectedNumClients) {
+        assertTimeoutPreemptively(Duration.ofSeconds(1), () -> {
+            while (main.getNumClients() != expectedNumClients) {
+                Thread.sleep(1);
+            }
+        }, () -> "The number of clients did not get " + expectedNumClients + " in time (it is " + main.getNumClients());
+    }
+
+    private void assertExcessThreadsAfterAWhile(List<String> initialThreadNames, int extra) {
+        int initialSize = initialThreadNames.size();
+        assertTimeoutPreemptively(Duration.ofSeconds(1), () -> {
+            while (initialSize + extra != getCurrentThreadNames().size()) {
+                Thread.sleep(1);
+            }
+        }, () -> {
+            List<String> nowThreadNames = getCurrentThreadNames();
+            int          nowSize        = nowThreadNames.size();
+            List<String> nowExtraNames = nowThreadNames.stream()
+                    .filter(t -> !initialThreadNames.contains(t))
+                    .sorted()
+                    .collect(Collectors.toList());
+            if (extra == 0) {
+                return "the number of Threads did not return to " + initialSize + " but remained " + nowSize + " (extra: " + nowExtraNames + ")";
+            } else {
+                return "the number of Threads did not increase by " + extra + " but by " + (nowSize - initialSize) + " (extra: " + nowExtraNames + ")";
+            }
+        });
     }
 
     private static String mediumRandomString() {
