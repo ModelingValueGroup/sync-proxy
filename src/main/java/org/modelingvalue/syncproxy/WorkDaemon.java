@@ -15,7 +15,7 @@
 
 package org.modelingvalue.syncproxy;
 
-import java.io.*;
+import java.io.Closeable;
 
 @SuppressWarnings("unused")
 public abstract class WorkDaemon<WORK> extends Thread implements Closeable {
@@ -32,6 +32,7 @@ public abstract class WorkDaemon<WORK> extends Thread implements Closeable {
 
     protected abstract void execute(WORK w) throws InterruptedException;
 
+    @Override
     public void run() {
         while (!stop) {
             try {

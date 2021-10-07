@@ -29,10 +29,12 @@ import java.util.stream.Collectors;
 public class Main {
     private static final boolean VERBOSE = Boolean.getBoolean("VERBOSE");
 
-    private static int connectionNumber;
+    private static int           connectionNumber;
 
     public static void main(String[] args) {
-        if (args.length != 1) {
+        if (args.length == 0) {
+            args = new String[]{"55055"};
+        } else if (args.length != 1) {
             throw new Error("usage: $0 <port-num>");
         }
         try {
@@ -46,11 +48,11 @@ public class Main {
     private final Set<SockReader> connectionSet = new HashSet<>();
     private final int             port;
     private final Thread          listenThread;
-    private       boolean         closingRequested;
+    private boolean               closingRequested;
 
     public Main(int port) throws IOException {
         listenSocket = new ServerSocket(port);
-        this.port    = listenSocket.getLocalPort();
+        this.port = listenSocket.getLocalPort();
         listenThread = new Thread(() -> {
             if (VERBOSE) {
                 System.err.println("listening for clients on port " + this.port + "...");
@@ -76,10 +78,10 @@ public class Main {
     }
 
     private synchronized void addClient(Socket sock) throws IOException {
+        connectionSet.add(new SockReader(sock, connectionNumber++));
         if (VERBOSE) {
             System.err.println("new  client: " + sock + " (" + connectionSet.size() + " clients now)");
         }
-        connectionSet.add(new SockReader(sock, connectionNumber++));
     }
 
     private synchronized void removeClient(SockReader sr) {
@@ -126,8 +128,8 @@ public class Main {
         public SockReader(Socket sock, int i) throws IOException {
             super("SyncProxyReader-" + i);
             this.sock = sock;
-            this.in   = new BufferedReader(new InputStreamReader(sock.getInputStream()));
-            this.out  = new PrintWriter(sock.getOutputStream(), true);
+            this.in = new BufferedReader(new InputStreamReader(sock.getInputStream()));
+            this.out = new PrintWriter(sock.getOutputStream(), true);
             start();
         }
 
@@ -147,6 +149,9 @@ public class Main {
             if (line == null) {
                 close();
             } else {
+                if (VERBOSE) {
+                    System.err.println("send line " + line);
+                }
                 getClientList(this).forEach(sr -> {
                     //System.err.println("    write: " + line + "  (to " + sr.sock + ")");
                     sr.send(line);
