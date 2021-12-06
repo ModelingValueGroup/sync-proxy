@@ -15,9 +15,9 @@
 
 package org.modelingvalue.syncproxy;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
+import org.junit.jupiter.api.RepeatedTest;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -25,7 +25,6 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.time.Duration;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.BlockingQueue;
@@ -33,7 +32,9 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import org.junit.jupiter.api.RepeatedTest;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 
 @SuppressWarnings("BusyWait")
 class MainTest {
@@ -41,7 +42,7 @@ class MainTest {
     void checkThreads() throws IOException, InterruptedException {
         List<String> initialThreads = getCurrentThreadNames();
 
-        Main       main       = new Main(0);
+        Main       main       = new Main();
         int        actualPort = main.getPort();
         TestClient c0         = new TestClient(actualPort);
         TestClient c1         = new TestClient(actualPort);
@@ -64,7 +65,7 @@ class MainTest {
     @RepeatedTest(20)
     void twoClientsA() throws IOException, InterruptedException {
         List<String> initialThreads = getCurrentThreadNames();
-        Main         main           = new Main(0);
+        Main         main           = new Main();
         int          actualPort     = main.getPort();
         TestClient   c0             = new TestClient(actualPort);
         TestClient   c1             = new TestClient(actualPort);
@@ -94,7 +95,7 @@ class MainTest {
     @RepeatedTest(20)
     void twoClientsB() throws IOException, InterruptedException {
         List<String> initialThreads = getCurrentThreadNames();
-        Main         main           = new Main(0);
+        Main         main           = new Main();
         int          actualPort     = main.getPort();
         TestClient   c0             = new TestClient(actualPort);
         TestClient   c1             = new TestClient(actualPort);
@@ -122,7 +123,7 @@ class MainTest {
     @RepeatedTest(20)
     void longString() throws IOException, InterruptedException {
         List<String> initialThreads = getCurrentThreadNames();
-        Main         main           = new Main(0);
+        Main         main           = new Main();
         int          actualPort     = main.getPort();
         TestClient   c0             = new TestClient(actualPort);
         TestClient   c1             = new TestClient(actualPort);
@@ -133,8 +134,12 @@ class MainTest {
         String s1 = longRandomString();
         c0.writeLine(s0);
         c1.writeLine(s1);
-        assertEquals(s0, c1.readLine());
-        assertEquals(s1, c0.readLine());
+        String ss1 = c1.readLine();
+        String ss0 = c0.readLine();
+        assertEquals(s0.length(), ss1.length());
+        assertEquals(s1.length(), ss0.length());
+        assertEquals(s0, ss1);
+        assertEquals(s1, ss0);
 
         assertExcessThreadsAfterAWhile(initialThreads, 5);
         main.close();
@@ -146,14 +151,14 @@ class MainTest {
     @RepeatedTest(20)
     void manyStrings() throws IOException, InterruptedException {
         List<String> initialThreads = getCurrentThreadNames();
-        Main         main           = new Main(0);
+        Main         main           = new Main();
         int          actualPort     = main.getPort();
         TestClient   c0             = new TestClient(actualPort);
         TestClient   c1             = new TestClient(actualPort);
 
         assertNumClientsAfterAWhile(main, 2);
 
-        for (int i = 0; i < 1000; i++) {
+        for (int i = 0; i < 200; i++) {
             String s0 = mediumRandomString();
             String s1 = mediumRandomString();
             c0.writeLine(s0);
@@ -169,21 +174,23 @@ class MainTest {
         assertExcessThreadsAfterAWhile(initialThreads, 0);
     }
 
-    @RepeatedTest(20)
-    void threeClients() throws IOException, InterruptedException {
+    @ParameterizedTest
+    @ValueSource(chars = {'$', '\n', ';', '|', '\0'})
+    void threeClients(char sep) throws IOException, InterruptedException {
+        System.err.println("threeClients SEP=" + sep);
         List<String> initialThreads = getCurrentThreadNames();
-        Main         main           = new Main(0);
+        Main         main           = new Main(0, sep, true);
         int          actualPort     = main.getPort();
 
-        TestClient c0 = new TestClient(actualPort);
-        TestClient c1 = new TestClient(actualPort);
-        TestClient c2 = new TestClient(actualPort);
+        TestClient c0 = new TestClient(actualPort, sep);
+        TestClient c1 = new TestClient(actualPort, sep);
+        TestClient c2 = new TestClient(actualPort, sep);
 
         assertNumClientsAfterAWhile(main, 3);
 
-        c0.writeLine("haystack1");
-        assertEquals("haystack1", c1.readLine());
-        assertEquals("haystack1", c2.readLine());
+        c0.writeLine("h•yståck1");
+        assertEquals("h•yståck1", c1.readLine());
+        assertEquals("h•yståck1", c2.readLine());
 
         c1.writeLine("haystack2");
         assertEquals("haystack2", c0.readLine());
@@ -210,7 +217,7 @@ class MainTest {
     }
 
     private void assertNumClientsAfterAWhile(Main main, int expectedNumClients) {
-        assertTimeoutPreemptively(Duration.ofSeconds(1), () -> {
+        assertTimeoutPreemptively(Duration.ofSeconds(100), () -> {
             while (main.getNumClients() != expectedNumClients) {
                 Thread.sleep(1);
             }
@@ -239,35 +246,63 @@ class MainTest {
     }
 
     private static String mediumRandomString() {
-        byte[] bytes = new byte[1024];
-        new Random().nextBytes(bytes);
-        return Arrays.toString(bytes);
+        return getRandomString(1024);
     }
 
     private static String longRandomString() {
-        byte[] bytes = new byte[1024 * 1024];
+        return getRandomString(1024 * 1024);
+    }
+
+    private static String getRandomString(int length) {
+        byte[] bytes = new byte[length];
         new Random().nextBytes(bytes);
-        return Arrays.toString(bytes);
+        for (int i = 0; i < bytes.length; i++) {
+            if (bytes[i] == '\n' || bytes[i] == '\r') {
+                bytes[i] = '.';
+            }
+        }
+        bytes[bytes.length - 1] = '.';
+        bytes[bytes.length - 2] = '.';
+        return new String(bytes);
     }
 
     private static class TestClient extends WorkDaemon<String> {
-        private final Socket                sock;
-        private final BufferedReader        in;
-        private final PrintWriter           out;
-        private final BlockingQueue<String> lineQueue = new LinkedBlockingQueue<>();
+        private static final String                EOL_TOKEN = "EOL_TOKEN";
+        private final        char                  separator;
+        private final        Socket                sock;
+        private final        BufferedReader        in;
+        private final        PrintWriter           out;
+        private final        BlockingQueue<String> lineQueue = new LinkedBlockingQueue<>();
 
         public TestClient(int port) throws IOException {
+            this(port, '\n');
+        }
+
+        public TestClient(int port, char separator) throws IOException {
             super("SyncProxy-tester");
-            sock = new Socket((String) null, port);
-            in   = new BufferedReader(new InputStreamReader(sock.getInputStream()));
-            out  = new PrintWriter(sock.getOutputStream(), true);
+            this.separator = separator;
+            sock           = new Socket((String) null, port);
+            in             = new BufferedReader(new InputStreamReader(sock.getInputStream()));
+            out            = new PrintWriter(sock.getOutputStream(), true);
             start();
         }
 
         @Override
         protected String waitForWork() {
             try {
-                return in.readLine();
+                if (separator == '\n') {
+                    return in.readLine();
+                } else {
+                    StringBuilder b = new StringBuilder();
+                    int           c;
+                    while ((c = in.read()) != separator && c != -1) {
+                        b.append((char) c);
+                    }
+                    if (c == -1 && b.length() == 0) {
+                        return null;
+                    }
+                    return b.toString();
+                }
             } catch (IOException e) {
                 return null;
             }
@@ -277,26 +312,39 @@ class MainTest {
         protected void execute(String line) throws InterruptedException {
             if (line == null) {
                 close();
+                lineQueue.put(EOL_TOKEN);
             } else {
                 lineQueue.put(line);
             }
         }
 
         public void writeLine(String line) {
+            assertEquals(-1, line.indexOf(separator));
             if (!sock.isClosed() && sock.isConnected()) {
                 out.write(line);
-                out.write('\n');
+                out.write(separator);
                 out.flush();
             }
         }
 
         public String readNull() throws InterruptedException {
-            return sock.isClosed() || !sock.isConnected() ? null : lineQueue.poll(50, TimeUnit.MILLISECONDS);
+            String line = lineQueue.poll(50, TimeUnit.MILLISECONDS);
+            //noinspection StringEquality
+            if (line == EOL_TOKEN) {
+                lineQueue.put(line);
+                line = null;
+            }
+            return line;
         }
 
         public String readLine() throws InterruptedException {
-            return sock.isClosed() || !sock.isConnected() ? null : lineQueue.poll(1000, TimeUnit.MILLISECONDS);
+            String line = lineQueue.poll(1000, TimeUnit.MILLISECONDS);
+            //noinspection StringEquality
+            if (line == EOL_TOKEN) {
+                lineQueue.put(line);
+                line = null;
+            }
+            return line;
         }
     }
-
 }

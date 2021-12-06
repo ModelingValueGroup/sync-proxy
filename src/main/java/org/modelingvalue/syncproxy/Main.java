@@ -15,62 +15,97 @@
 
 package org.modelingvalue.syncproxy;
 
-import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
+import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 public class Main {
-    private static final boolean VERBOSE = Boolean.getBoolean("VERBOSE");
+    private static final int  DEFAULT_PORT      = 55055;
+    private static final char DEFAULT_SEPARATOR = '\n';
 
-    private static int           connectionNumber;
+    private static int connectionNumber;
 
     public static void main(String[] args) {
-        if (args.length == 0) {
-            args = new String[]{"55055"};
-        } else if (args.length != 1) {
-            throw new Error("usage: $0 <port-num>");
+        boolean verbose   = false;
+        int     port      = DEFAULT_PORT;
+        char    separator = DEFAULT_SEPARATOR;
+
+        if (1 <= args.length && args[0].equals("-v")) {
+            verbose = true;
+            System.arraycopy(args, 1, args, 0, args.length - 1);
+        }
+        if (3 <= args.length) {
+            throw new Error("usage: $0 [-v] [<port-num> [<separator>]]");
+        }
+        if (2 <= args.length) {
+            if (args[1].length() != 1) {
+                throw new Error("separator must be exactly one character");
+            }
+            separator = args[1].charAt(0);
+        }
+        if (1 <= args.length) {
+            port = Integer.parseInt(args[0]);
         }
         try {
-            new Main(Integer.parseInt(args[0]));
+            new Main(port, separator, verbose);
         } catch (IOException e) {
             System.err.println("could not open port: " + e.getMessage());
         }
     }
 
+    private final char            separator;
+    private final boolean         verbose;
     private final ServerSocket    listenSocket;
-    private final Set<SockReader> connectionSet = new HashSet<>();
     private final int             port;
     private final Thread          listenThread;
-    private boolean               closingRequested;
+    private final Set<SockReader> connectionSet = new HashSet<>();
+    private       boolean         closingRequested;
 
-    public Main(int port) throws IOException {
+    public Main() throws IOException {
+        this(0, DEFAULT_SEPARATOR, false);
+    }
+
+    public Main(int port, char separator, boolean verbose) throws IOException {
+        this.separator = separator;
+        if (Character.toString(separator).getBytes().length != 1) {
+            throw new Error("separator '" + separator + "' can not be used, only single byte separators are valid");
+        }
+        this.verbose = verbose;
         listenSocket = new ServerSocket(port);
-        this.port = listenSocket.getLocalPort();
+        this.port    = listenSocket.getLocalPort();
         listenThread = new Thread(() -> {
-            if (VERBOSE) {
-                System.err.println("listening for clients on port " + this.port + "...");
-            }
+            verbose("listening for clients on port " + this.port + "...");
             while (!listenSocket.isClosed()) {
                 try {
                     addClient(listenSocket.accept());
                 } catch (IOException e) {
                     if (!closingRequested) {
-                        System.err.println("could not connect with client: " + e.getMessage());
+                        log("could not connect with client: " + e.getMessage());
                     }
                 }
             }
-            if (VERBOSE) {
-                System.err.println("stop listening for clients on port " + this.port);
-            }
+            verbose("stop listening for clients on port " + this.port);
         }, "SyncProxy-" + this.port);
         listenThread.start();
+    }
+
+    public void verbose(String msg) {
+        if (verbose) {
+            log(msg);
+        }
+    }
+
+    public void log(String msg) {
+        System.err.println(msg);
     }
 
     public int getPort() {
@@ -79,16 +114,12 @@ public class Main {
 
     private synchronized void addClient(Socket sock) throws IOException {
         connectionSet.add(new SockReader(sock, connectionNumber++));
-        if (VERBOSE) {
-            System.err.println("new  client: " + sock + " (" + connectionSet.size() + " clients now)");
-        }
+        verbose("new  client: " + sock + " (" + connectionSet.size() + " clients now)");
     }
 
     private synchronized void removeClient(SockReader sr) {
         if (connectionSet.remove(sr)) {
-            if (VERBOSE) {
-                System.err.println("lost client: " + sr.sock + " (" + connectionSet.size() + " clients now)");
-            }
+            verbose("lost client: " + sr.sock + " (" + connectionSet.size() + " clients now)");
         }
     }
 
@@ -106,7 +137,7 @@ public class Main {
             listenSocket.close();
             listenThread.interrupt();
         } catch (IOException e) {
-            System.err.println("error closing listening socket (" + listenSocket + "): " + e.getMessage());
+            log("error closing listening socket (" + listenSocket + "): " + e.getMessage());
         }
         List<SockReader> clientList = getClientList(null);
         clientList.forEach(SockReader::close);
@@ -120,49 +151,69 @@ public class Main {
         }
     }
 
-    private class SockReader extends WorkDaemon<String> {
-        private final Socket         sock;
-        private final BufferedReader in;
-        private final PrintWriter    out;
+    private class SockReader extends WorkDaemon<byte[]> {
+        private final Socket       sock;
+        private final InputStream  in;
+        private final OutputStream out;
 
         public SockReader(Socket sock, int i) throws IOException {
             super("SyncProxyReader-" + i);
             this.sock = sock;
-            this.in = new BufferedReader(new InputStreamReader(sock.getInputStream()));
-            this.out = new PrintWriter(sock.getOutputStream(), true);
+            this.in   = sock.getInputStream();
+            this.out  = sock.getOutputStream();
             start();
         }
 
         @Override
-        protected String waitForWork() {
+        protected byte[] waitForWork() {
             try {
-                return in.readLine();
+                ByteArrayOutputStream b = new ByteArrayOutputStream();
+                int                   c;
+                while ((c = in.read()) != separator && c != -1) {
+                    b.write((byte) c);
+                }
+                if (c == -1 && b.size() == 0) {
+                    verbose("reader-" + sock.getRemoteSocketAddress() + ": detected EOF");
+                    return null;
+                }
+                return b.toByteArray();
+            } catch (SocketException e) {
+                if (e.getMessage().equals("Socket closed")) {
+                    verbose("reader-" + sock.getRemoteSocketAddress() + ": socket closed");
+                } else {
+                    log("reader-" + sock.getRemoteSocketAddress() + ": unexpected exception: " + e);
+                }
             } catch (IOException e) {
-                //System.err.println("could not read from client at " + sock.getRemoteSocketAddress() + ": " + e.getMessage());
-                return null;
+                log("reader-" + sock.getRemoteSocketAddress() + ": problem reading: " + e);
             }
+            return null;
         }
 
         @Override
-        protected void execute(String line) {
-            //System.err.println("proxy got: " + line + "  (on " + sock + ")");
-            if (line == null) {
+        protected void execute(byte[] bytes) {
+            if (bytes == null) {
+                verbose("reader-" + sock.getRemoteSocketAddress() + ": client disconnected");
                 close();
             } else {
-                if (VERBOSE) {
-                    System.err.println("send line " + line);
-                }
+                verbose("reader-" + sock.getRemoteSocketAddress() + ": got '" + new String(bytes, StandardCharsets.UTF_8) + "'");
                 getClientList(this).forEach(sr -> {
-                    //System.err.println("    write: " + line + "  (to " + sr.sock + ")");
-                    sr.send(line);
+                    verbose("reader-" + sock.getRemoteSocketAddress() + ": relaying to " + sr.sock.getRemoteSocketAddress() + " '" + new String(bytes, StandardCharsets.UTF_8) + "'");
+                    try {
+                        sr.send(bytes);
+                    } catch (IOException e) {
+                        log("reader-" + sock.getRemoteSocketAddress() + ": relaying to " + sr.sock.getRemoteSocketAddress() + " failed: " + e.getMessage());
+                        sr.close();
+                    }
                 });
             }
         }
 
-        private void send(String line) {
-            out.write(line);
-            out.write('\n');
-            out.flush();
+        private void send(byte[] bytes) throws IOException {
+            synchronized (Main.class) {
+                out.write(bytes);
+                out.write(separator);
+                out.flush();
+            }
         }
 
         @Override
@@ -172,7 +223,7 @@ public class Main {
             try {
                 sock.close();
             } catch (IOException e) {
-                System.err.println("error closing client socket (" + sock + "): " + e.getMessage());
+                log("error closing client socket (" + sock + "): " + e.getMessage());
             }
             removeClient(this);
         }
