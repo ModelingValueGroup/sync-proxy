@@ -33,6 +33,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 
@@ -136,6 +137,8 @@ class MainTest {
         c1.writeLine(s1);
         String ss1 = c1.readLine();
         String ss0 = c0.readLine();
+        assertNotNull(ss0);
+        assertNotNull(ss1);
         assertEquals(s0.length(), ss1.length());
         assertEquals(s1.length(), ss0.length());
         assertEquals(s0, ss1);
@@ -221,7 +224,7 @@ class MainTest {
             while (main.getNumClients() != expectedNumClients) {
                 Thread.sleep(1);
             }
-        }, () -> "The number of clients did not get " + expectedNumClients + " in time (it is " + main.getNumClients());
+        }, () -> "The number of clients did not get " + expectedNumClients + " in time (it is " + main.getNumClients() + " now)");
     }
 
     private void assertExcessThreadsAfterAWhile(List<String> initialThreadNames, int extra) {
@@ -250,7 +253,7 @@ class MainTest {
     }
 
     private static String longRandomString() {
-        return getRandomString(1024 * 1024);
+        return getRandomString(100 * 1024);
     }
 
     private static String getRandomString(int length) {
