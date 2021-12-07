@@ -83,10 +83,10 @@ class MainTest {
         main.close();
 
         c0.writeLine("closed");
-        assertNull(c1.readNull());
+        assertNull(c1.readLine());
 
         c1.writeLine("closed");
-        assertNull(c0.readNull());
+        assertNull(c0.readLine());
 
         c0.interrupt();
         c1.interrupt();
@@ -113,8 +113,8 @@ class MainTest {
 
         c0.writeLine("closed");
         c1.writeLine("closed");
-        assertNull(c1.readNull());
-        assertNull(c0.readNull());
+        assertNull(c1.readLine());
+        assertNull(c0.readLine());
 
         c0.interrupt();
         c1.interrupt();
@@ -253,7 +253,7 @@ class MainTest {
     }
 
     private static String longRandomString() {
-        return getRandomString(100 * 1024);
+        return getRandomString(1024 * 1024);
     }
 
     private static String getRandomString(int length) {
@@ -330,18 +330,8 @@ class MainTest {
             }
         }
 
-        public String readNull() throws InterruptedException {
-            String line = lineQueue.poll(50, TimeUnit.MILLISECONDS);
-            //noinspection StringEquality
-            if (line == EOL_TOKEN) {
-                lineQueue.put(line);
-                line = null;
-            }
-            return line;
-        }
-
         public String readLine() throws InterruptedException {
-            String line = lineQueue.poll(1000, TimeUnit.MILLISECONDS);
+            String line = lineQueue.poll(60_000, TimeUnit.MILLISECONDS);
             //noinspection StringEquality
             if (line == EOL_TOKEN) {
                 lineQueue.put(line);
