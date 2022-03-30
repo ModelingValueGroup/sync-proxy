@@ -43,7 +43,7 @@ class MainTest {
     void checkThreads() throws IOException, InterruptedException {
         List<String> initialThreads = getCurrentThreadNames();
 
-        Main       main       = new Main();
+        DclareRouter       main       = new DclareRouter();
         int        actualPort = main.getPort();
         TestClient c0         = new TestClient(actualPort);
         TestClient c1         = new TestClient(actualPort);
@@ -66,7 +66,7 @@ class MainTest {
     @RepeatedTest(20)
     void twoClientsA() throws IOException, InterruptedException {
         List<String> initialThreads = getCurrentThreadNames();
-        Main         main           = new Main();
+        DclareRouter         main           = new DclareRouter();
         int          actualPort     = main.getPort();
         TestClient   c0             = new TestClient(actualPort);
         TestClient   c1             = new TestClient(actualPort);
@@ -96,7 +96,7 @@ class MainTest {
     @RepeatedTest(20)
     void twoClientsB() throws IOException, InterruptedException {
         List<String> initialThreads = getCurrentThreadNames();
-        Main         main           = new Main();
+        DclareRouter         main           = new DclareRouter();
         int          actualPort     = main.getPort();
         TestClient   c0             = new TestClient(actualPort);
         TestClient   c1             = new TestClient(actualPort);
@@ -124,7 +124,7 @@ class MainTest {
     @RepeatedTest(20)
     void longString() throws IOException, InterruptedException {
         List<String> initialThreads = getCurrentThreadNames();
-        Main         main           = new Main();
+        DclareRouter         main           = new DclareRouter();
         int          actualPort     = main.getPort();
         TestClient   c0             = new TestClient(actualPort);
         TestClient   c1             = new TestClient(actualPort);
@@ -154,7 +154,7 @@ class MainTest {
     @RepeatedTest(20)
     void manyStrings() throws IOException, InterruptedException {
         List<String> initialThreads = getCurrentThreadNames();
-        Main         main           = new Main();
+        DclareRouter         main           = new DclareRouter();
         int          actualPort     = main.getPort();
         TestClient   c0             = new TestClient(actualPort);
         TestClient   c1             = new TestClient(actualPort);
@@ -182,7 +182,7 @@ class MainTest {
     void threeClients(char sep) throws IOException, InterruptedException {
         System.err.println("threeClients SEP=" + sep);
         List<String> initialThreads = getCurrentThreadNames();
-        Main         main           = new Main(0, sep, true);
+        DclareRouter         main           = new DclareRouter(0, sep, true);
         int          actualPort     = main.getPort();
 
         TestClient c0 = new TestClient(actualPort, sep);
@@ -219,7 +219,7 @@ class MainTest {
                 .collect(Collectors.toList());
     }
 
-    private void assertNumClientsAfterAWhile(Main main, int expectedNumClients) {
+    private void assertNumClientsAfterAWhile(DclareRouter main, int expectedNumClients) {
         assertTimeoutPreemptively(Duration.ofSeconds(100), () -> {
             while (main.getNumClients() != expectedNumClients) {
                 Thread.sleep(1);
