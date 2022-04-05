@@ -81,7 +81,7 @@ class SocketReader extends WorkDaemon<byte[]> {
 				router.verbose("reader-" + sock.getRemoteSocketAddress() + ": got '"
 						+ new String(bytes, StandardCharsets.UTF_8) + "'");
 				
-				Map<String, List<String>> changesPerModel = router.splitToChangesPerSharedModel(bytes);
+				Map<String, List<String>> changesPerModel = DclareRouter.SHARE_TO_ALL ? null : router.splitToChangesPerSharedModel(bytes);
 				
 				router.getClientList(this).forEach(ci -> {
 					SocketReader sr = ci.socketReader;
@@ -89,9 +89,15 @@ class SocketReader extends WorkDaemon<byte[]> {
 							+ sr.sock.getRemoteSocketAddress() + " '" + new String(bytes, StandardCharsets.UTF_8)
 							+ "'");
 					try {
-						String change = "{" + ci.sharedModels.stream().flatMap(m-> changesPerModel.getOrDefault(m, new ArrayList<String>()).stream()).collect(Collectors.joining(", ")) + "}";	
-						if (!isEmptyChange(change.getBytes())) {
-							sr.send(change.getBytes());
+						byte[] change = null;	
+						if (DclareRouter.SHARE_TO_ALL) {
+							change = bytes; //for testing
+						} else { 
+							change = ("{" + ci.sharedModels.stream().flatMap(m-> changesPerModel.getOrDefault(m, new ArrayList<String>()).stream()).collect(Collectors.joining(", ")) + "}").getBytes();	
+						
+						}
+						if (!isEmptyChange(change)) {
+							sr.send(change);
 						}
 					} catch (IOException e) {
 						DclareRouter.log("reader-" + sock.getRemoteSocketAddress() + ": relaying to "

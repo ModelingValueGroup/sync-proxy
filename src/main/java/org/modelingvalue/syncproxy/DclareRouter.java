@@ -31,6 +31,7 @@ public class DclareRouter {
 	private static final char DEFAULT_SEPARATOR = '\n';
 
 	private static int connectionNumber;
+	public  static boolean SHARE_TO_ALL; //for testing
 
 	public static void main(String[] args) {
 		boolean verbose = false;
