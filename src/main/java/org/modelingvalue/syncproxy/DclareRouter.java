@@ -128,7 +128,7 @@ public class DclareRouter {
 	}
 
 	private synchronized ClientInfo findClient(SocketReader r) {
-		return connectionSet.stream().filter(ci -> ci.socketReader.equals(r)).findAny().get();
+		return connectionSet.stream().filter(ci -> ci.socketReader.equals(r)).findAny().orElse(null);
 	}
 
 	public synchronized void removeClient(SocketReader sr) {
@@ -136,7 +136,7 @@ public class DclareRouter {
 			console("client disconnected: " + sr + " (" + connectionSet.size() + " clients now)");
 		}
 	}
-	
+
 	public synchronized List<ClientInfo> getClientList(SocketReader except) {
 		return connectionSet.stream().filter(ci -> !ci.socketReader.equals(except)).collect(Collectors.toList());
 	}
@@ -193,10 +193,10 @@ public class DclareRouter {
 				info.sharedModels.add(modelId);
 				elementIndex = endModelIndex;
 			}
-		    System.err.println("client "+ info + " shared models " + info.sharedModels);	
+		    System.err.println("client "+ info + " shared models " + info.sharedModels);
 		}
 	}
-	
+
 	public Map<String, List<String>> splitToChangesPerSharedModel(byte[] bytes) {
 		String change = new String(bytes);
 		Map<String,String> idChangeMap = new HashMap<>();
@@ -213,17 +213,17 @@ public class DclareRouter {
 			changes.add(oneChange);
 			idChangeMap.put(id, oneChange);
 		}
-		
+
 		idChangeMap.forEach((id,c)-> {
 			String modelId = extractModelId(id);
 			if (modelId!=null) {
 				modelToChangeMap.computeIfAbsent(modelId, k->new ArrayList<>()).add(c);
 			}
 		});
-			
+
 		return modelToChangeMap;
 	}
-	
+
 	private String extractModelId(String id) {
 		if (id.startsWith("DModule")) {
 			return null;
@@ -234,7 +234,7 @@ public class DclareRouter {
 			int modelMarkerIndex = id.indexOf(modelIdMarker);
 			String modelPart = id.substring(modelMarkerIndex+modelIdMarker.length(),id.indexOf('/',modelMarkerIndex));
 			return "DModel" + modelIdMarker + modelPart;
-			
+
 		}
 		return null;
 	}
