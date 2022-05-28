@@ -13,17 +13,24 @@
 //     Arjan Kok, Carel Bast                                                                                           ~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-defaultTasks("mvgCorrector", "test", "publish", "mvgTagger")
+package org.modelingvalue.syncproxy;
 
-plugins {
-    `java-library`
-    `maven-publish`
-    id("org.modelingvalue.gradle.mvgplugin") version "1.1.3"
-}
-publishing {
-    publications {
-        create<MavenPublication>("sync-proxy") {
-            from(components["java"])
-        }
+import java.util.HashSet;
+import java.util.Set;
+
+public class ClientInfo {
+
+    private final int          connectionNr;
+    public final  SocketReader socketReader;
+    public final  Set<String>  sharedModels = new HashSet<>();
+
+    public ClientInfo(SocketReader r, int nr) {
+        this.socketReader = r;
+        this.connectionNr = nr;
     }
+
+    public String toString() {
+        return "connection#" + connectionNr;
+    }
+
 }

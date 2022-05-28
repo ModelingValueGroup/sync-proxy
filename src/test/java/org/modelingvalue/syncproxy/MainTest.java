@@ -16,6 +16,7 @@
 package org.modelingvalue.syncproxy;
 
 import org.junit.jupiter.api.RepeatedTest;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
@@ -42,11 +43,12 @@ class MainTest {
     @RepeatedTest(20)
     void checkThreads() throws IOException, InterruptedException {
         List<String> initialThreads = getCurrentThreadNames();
+        DclareRouter.SHARE_TO_ALL = true;
 
-        Main       main       = new Main();
-        int        actualPort = main.getPort();
-        TestClient c0         = new TestClient(actualPort);
-        TestClient c1         = new TestClient(actualPort);
+        DclareRouter main       = new DclareRouter();
+        int          actualPort = main.getPort();
+        TestClient   c0         = new TestClient(actualPort);
+        TestClient   c1         = new TestClient(actualPort);
 
         assertNumClientsAfterAWhile(main, 2);
 
@@ -66,10 +68,12 @@ class MainTest {
     @RepeatedTest(20)
     void twoClientsA() throws IOException, InterruptedException {
         List<String> initialThreads = getCurrentThreadNames();
-        Main         main           = new Main();
-        int          actualPort     = main.getPort();
-        TestClient   c0             = new TestClient(actualPort);
-        TestClient   c1             = new TestClient(actualPort);
+        DclareRouter.SHARE_TO_ALL = true;
+
+        DclareRouter main       = new DclareRouter();
+        int          actualPort = main.getPort();
+        TestClient   c0         = new TestClient(actualPort);
+        TestClient   c1         = new TestClient(actualPort);
 
         assertNumClientsAfterAWhile(main, 2);
 
@@ -96,10 +100,12 @@ class MainTest {
     @RepeatedTest(20)
     void twoClientsB() throws IOException, InterruptedException {
         List<String> initialThreads = getCurrentThreadNames();
-        Main         main           = new Main();
-        int          actualPort     = main.getPort();
-        TestClient   c0             = new TestClient(actualPort);
-        TestClient   c1             = new TestClient(actualPort);
+        DclareRouter.SHARE_TO_ALL = true;
+
+        DclareRouter main       = new DclareRouter();
+        int          actualPort = main.getPort();
+        TestClient   c0         = new TestClient(actualPort);
+        TestClient   c1         = new TestClient(actualPort);
 
         assertNumClientsAfterAWhile(main, 2);
 
@@ -124,10 +130,12 @@ class MainTest {
     @RepeatedTest(20)
     void longString() throws IOException, InterruptedException {
         List<String> initialThreads = getCurrentThreadNames();
-        Main         main           = new Main();
-        int          actualPort     = main.getPort();
-        TestClient   c0             = new TestClient(actualPort);
-        TestClient   c1             = new TestClient(actualPort);
+        DclareRouter.SHARE_TO_ALL = true;
+
+        DclareRouter main       = new DclareRouter();
+        int          actualPort = main.getPort();
+        TestClient   c0         = new TestClient(actualPort);
+        TestClient   c1         = new TestClient(actualPort);
 
         assertNumClientsAfterAWhile(main, 2);
 
@@ -151,13 +159,16 @@ class MainTest {
         assertExcessThreadsAfterAWhile(initialThreads, 0);
     }
 
-    @RepeatedTest(20)
+    //@RepeatedTest(20)
+    @Test
     void manyStrings() throws IOException, InterruptedException {
         List<String> initialThreads = getCurrentThreadNames();
-        Main         main           = new Main();
-        int          actualPort     = main.getPort();
-        TestClient   c0             = new TestClient(actualPort);
-        TestClient   c1             = new TestClient(actualPort);
+        DclareRouter.SHARE_TO_ALL = true;
+
+        DclareRouter main       = new DclareRouter();
+        int          actualPort = main.getPort();
+        TestClient   c0         = new TestClient(actualPort);
+        TestClient   c1         = new TestClient(actualPort);
 
         assertNumClientsAfterAWhile(main, 2);
 
@@ -166,7 +177,9 @@ class MainTest {
             String s1 = mediumRandomString();
             c0.writeLine(s0);
             c1.writeLine(s1);
+            System.err.println("reading c1.line");
             assertEquals(s0, c1.readLine());
+            System.err.println("reading c0.line");
             assertEquals(s1, c0.readLine());
         }
 
@@ -182,8 +195,10 @@ class MainTest {
     void threeClients(char sep) throws IOException, InterruptedException {
         System.err.println("threeClients SEP=" + sep);
         List<String> initialThreads = getCurrentThreadNames();
-        Main         main           = new Main(0, sep, true);
-        int          actualPort     = main.getPort();
+        DclareRouter.SHARE_TO_ALL = true;
+
+        DclareRouter main       = new DclareRouter(0, sep, true);
+        int          actualPort = main.getPort();
 
         TestClient c0 = new TestClient(actualPort, sep);
         TestClient c1 = new TestClient(actualPort, sep);
@@ -219,7 +234,7 @@ class MainTest {
                 .collect(Collectors.toList());
     }
 
-    private void assertNumClientsAfterAWhile(Main main, int expectedNumClients) {
+    private void assertNumClientsAfterAWhile(DclareRouter main, int expectedNumClients) {
         assertTimeoutPreemptively(Duration.ofSeconds(100), () -> {
             while (main.getNumClients() != expectedNumClients) {
                 Thread.sleep(1);
