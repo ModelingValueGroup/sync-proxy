@@ -45,10 +45,10 @@ class MainTest {
         List<String> initialThreads = getCurrentThreadNames();
         DclareRouter.SHARE_TO_ALL = true;
 
-        DclareRouter       main       = new DclareRouter();
-        int        actualPort = main.getPort();
-        TestClient c0         = new TestClient(actualPort);
-        TestClient c1         = new TestClient(actualPort);
+        DclareRouter main       = new DclareRouter();
+        int          actualPort = main.getPort();
+        TestClient   c0         = new TestClient(actualPort);
+        TestClient   c1         = new TestClient(actualPort);
 
         assertNumClientsAfterAWhile(main, 2);
 
@@ -70,10 +70,10 @@ class MainTest {
         List<String> initialThreads = getCurrentThreadNames();
         DclareRouter.SHARE_TO_ALL = true;
 
-        DclareRouter         main           = new DclareRouter();
-        int          actualPort     = main.getPort();
-        TestClient   c0             = new TestClient(actualPort);
-        TestClient   c1             = new TestClient(actualPort);
+        DclareRouter main       = new DclareRouter();
+        int          actualPort = main.getPort();
+        TestClient   c0         = new TestClient(actualPort);
+        TestClient   c1         = new TestClient(actualPort);
 
         assertNumClientsAfterAWhile(main, 2);
 
@@ -102,10 +102,10 @@ class MainTest {
         List<String> initialThreads = getCurrentThreadNames();
         DclareRouter.SHARE_TO_ALL = true;
 
-        DclareRouter         main           = new DclareRouter();
-        int          actualPort     = main.getPort();
-        TestClient   c0             = new TestClient(actualPort);
-        TestClient   c1             = new TestClient(actualPort);
+        DclareRouter main       = new DclareRouter();
+        int          actualPort = main.getPort();
+        TestClient   c0         = new TestClient(actualPort);
+        TestClient   c1         = new TestClient(actualPort);
 
         assertNumClientsAfterAWhile(main, 2);
 
@@ -132,10 +132,10 @@ class MainTest {
         List<String> initialThreads = getCurrentThreadNames();
         DclareRouter.SHARE_TO_ALL = true;
 
-        DclareRouter         main           = new DclareRouter();
-        int          actualPort     = main.getPort();
-        TestClient   c0             = new TestClient(actualPort);
-        TestClient   c1             = new TestClient(actualPort);
+        DclareRouter main       = new DclareRouter();
+        int          actualPort = main.getPort();
+        TestClient   c0         = new TestClient(actualPort);
+        TestClient   c1         = new TestClient(actualPort);
 
         assertNumClientsAfterAWhile(main, 2);
 
@@ -165,10 +165,10 @@ class MainTest {
         List<String> initialThreads = getCurrentThreadNames();
         DclareRouter.SHARE_TO_ALL = true;
 
-        DclareRouter         main           = new DclareRouter();
-        int          actualPort     = main.getPort();
-        TestClient   c0             = new TestClient(actualPort);
-        TestClient   c1             = new TestClient(actualPort);
+        DclareRouter main       = new DclareRouter();
+        int          actualPort = main.getPort();
+        TestClient   c0         = new TestClient(actualPort);
+        TestClient   c1         = new TestClient(actualPort);
 
         assertNumClientsAfterAWhile(main, 2);
 
@@ -197,8 +197,8 @@ class MainTest {
         List<String> initialThreads = getCurrentThreadNames();
         DclareRouter.SHARE_TO_ALL = true;
 
-        DclareRouter         main           = new DclareRouter(0, sep, true);
-        int          actualPort     = main.getPort();
+        DclareRouter main       = new DclareRouter(0, sep, true);
+        int          actualPort = main.getPort();
 
         TestClient c0 = new TestClient(actualPort, sep);
         TestClient c1 = new TestClient(actualPort, sep);
