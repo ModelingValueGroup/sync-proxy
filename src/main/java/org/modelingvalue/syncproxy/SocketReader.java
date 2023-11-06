@@ -36,9 +36,9 @@ class SocketReader extends WorkDaemon<byte[]> {
     public SocketReader(DclareRouter router, Socket sock, int i) throws IOException {
         super("SyncProxyReader-" + i);
         this.router = router;
-        this.sock   = sock;
-        this.in     = sock.getInputStream();
-        this.out    = sock.getOutputStream();
+        this.sock = sock;
+        this.in = sock.getInputStream();
+        this.out = sock.getOutputStream();
         start();
     }
 
@@ -50,7 +50,7 @@ class SocketReader extends WorkDaemon<byte[]> {
     protected byte[] waitForWork() {
         try {
             ByteArrayOutputStream b = new ByteArrayOutputStream();
-            int                   c;
+            int c;
             while ((c = in.read()) != router.getSeparator() && c != -1) {
                 b.write((byte) c);
             }
@@ -83,9 +83,7 @@ class SocketReader extends WorkDaemon<byte[]> {
 
             router.getClientList(this).forEach(ci -> {
                 SocketReader sr = ci.socketReader;
-                router.verbose("reader-" + sock.getRemoteSocketAddress() + ": relaying to "
-                               + sr.sock.getRemoteSocketAddress() + " '" + new String(bytes, StandardCharsets.UTF_8)
-                               + "'");
+                router.verbose("reader-" + sock.getRemoteSocketAddress() + ": relaying to " + sr.sock.getRemoteSocketAddress() + " '" + new String(bytes, StandardCharsets.UTF_8) + "'");
                 try {
                     byte[] change = bytes; //for testing
                     if (!DclareRouter.SHARE_TO_ALL && changesPerModel != null) {
@@ -95,8 +93,7 @@ class SocketReader extends WorkDaemon<byte[]> {
                         sr.send(change);
                     }
                 } catch (IOException e) {
-                    DclareRouter.log("reader-" + sock.getRemoteSocketAddress() + ": relaying to "
-                                     + sr.sock.getRemoteSocketAddress() + " failed: " + e.getMessage());
+                    DclareRouter.log("reader-" + sock.getRemoteSocketAddress() + ": relaying to " + sr.sock.getRemoteSocketAddress() + " failed: " + e.getMessage());
                     sr.close();
                 }
             });
@@ -123,6 +120,7 @@ class SocketReader extends WorkDaemon<byte[]> {
         router.removeClient(this);
     }
 
+    @Override
     public String toString() {
         return "SocketReader[" + this.sock + "]";
     }
