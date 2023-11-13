@@ -20,15 +20,16 @@ import java.util.Set;
 
 public class ClientInfo {
 
-    private final int          connectionNr;
-    public final  SocketReader socketReader;
-    public final  Set<String>  sharedModels = new HashSet<>();
+    private final int         connectionNr;
+    public final SocketReader socketReader;
+    public final Set<String>  sharedModels = new HashSet<>();
 
     public ClientInfo(SocketReader r, int nr) {
         this.socketReader = r;
         this.connectionNr = nr;
     }
 
+    @Override
     public String toString() {
         return "connection#" + connectionNr;
     }
